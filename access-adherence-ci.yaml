@@ -1,0 +1,46 @@
+name: access-adherence-ci
+
+pr: none 
+
+trigger:
+  branches:
+    include:
+    - aks-dev
+  paths:
+    include:
+    - accessandadherence
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+- group: 'ezhealth-ado-dev'
+- name: dirName
+  value: 'accessandadherence'
+- name: appName
+  value: 'access-and-adherence'
+- name: imgDate
+  value: $[format('{0:yyyyMMddHH}', pipeline.startTime)]
+- name: imgTag
+  value: $(Build.SourceVersion)
+
+stages:
+- stage: 'buildAndPush'
+  displayName: 'Build and Push'
+  jobs:
+  - job: Build
+    displayName: 'Build and Push'
+    steps:
+    - checkout: self
+      clean: true
+    - template: 'templates/build-and-push-tmpl.yaml'
+- stage: 'deployDev'
+  displayName: 'Deploy to Dev'
+  dependsOn: 'buildAndPush'
+  jobs:
+  - job: Git
+    displayName: 'Git Update'
+    steps:
+    - checkout: self
+      clean: true
+    - template: 'templates/git-update-npd-tmpl.yaml'

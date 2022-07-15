@@ -1,0 +1,16 @@
+steps:
+- task: Bash@3
+  displayName: 'Git Update'
+  inputs:
+    targetType: 'inline'
+    script: |
+      git clone -b $(adoBranch) https://$(adoToken)@dev.azure.com/zuelligpharmadevops/eZConsult/_git/aks-migration
+      cd $(adoRepo)
+      git checkout $(adoBranch)
+      git config user.name "Azure Pipelines"
+      sed -i '0,/^\([[:space:]]*tag: *\).*/s//\1$(imgDate)$(imgTag)/;' helm/$(appName)/$(valueFile)
+      if [ $? -ne 0 ]; then
+        exit 1
+      fi
+      git commit -a -m 'Update with image tag: $(imgDate)$(imgTag)'
+      git push -u https://$(adoToken)@dev.azure.com/zuelligpharmadevops/eZConsult/_git/aks-migration $(adoBranch)
